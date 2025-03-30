@@ -1,6 +1,6 @@
 <?php
 
-class uploader_iw_upload_handler extends uploader_upload_handler
+class xuploader_iw_upload_handler extends uploader_upload_handler
 {
     /**
      * Postvars cache
