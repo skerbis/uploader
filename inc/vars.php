@@ -8,7 +8,8 @@ if(isset($args['types']) && trim($args['types'])) {
 }
 return '
 <script>
-var uploader_options = {
+// Globale Optionen für den Uploader
+window.uploader_options = {
     messages: {
         maxNumberOfFiles: "'.rex_i18n::msg('uploader_errors_max_number_of_files').'",
         acceptFileTypes: "'.rex_i18n::msg('uploader_errors_accept_file_types').'",
