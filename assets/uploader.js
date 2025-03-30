@@ -1,10 +1,16 @@
 // Datei: assets/uploader.js
-/* globals Dropzone */
+/* globals Dropzone, selectMedia, selectMedialist */
 
 // Konfiguration für Dropzone verhindern, dass es automatisch Uploads findet
 Dropzone.autoDiscover = false;
 
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // Sicherstellen, dass uploader_options verfügbar ist
+    if (typeof window.uploader_options === 'undefined') {
+        console.error('Uploader options not found. Make sure vars.php is included before uploader.js');
+        return;
+    }
     
     // REDAXO MediaPool-Kategorie auswählen
     const mediaCatSelect = document.getElementById('rex-mediapool-category');
@@ -15,15 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Dropzone Konfiguration
     const dropzoneOptions = {
-        url: uploader_options.endpoint,
+        url: window.uploader_options.endpoint,
         paramName: "files", // Der Name des Datei-Parameters im Request
-        maxFilesize: uploader_options.imageMaxFileSize / 1000000, // MB
-        acceptedFiles: uploader_options.acceptFileTypes ? uploader_options.acceptFileTypes.toString().replace(/\/(\.|\/)|\(|\)|\$/gi, '') : null,
+        maxFilesize: window.uploader_options.loadImageMaxFileSize / 1000000, // MB
+        acceptedFiles: window.uploader_options.acceptFileTypes ? window.uploader_options.acceptFileTypes.toString().replace(/\/(\.|\/)|\(|\)|\$/gi, '') : null,
         addRemoveLinks: true,
         dictDefaultMessage: "Dateien hier ablegen oder klicken zum Auswählen",
         dictFallbackMessage: "Dein Browser unterstützt keine Drag'n'Drop Datei-Uploads.",
-        dictFileTooBig: uploader_options.messages.maxFileSize,
-        dictInvalidFileType: uploader_options.messages.acceptFileTypes,
+        dictFileTooBig: window.uploader_options.messages.maxFileSize,
+        dictInvalidFileType: window.uploader_options.messages.acceptFileTypes,
         dictResponseError: "Server antwortete mit {{statusCode}} Code.",
         dictCancelUpload: "Upload abbrechen",
         dictUploadCanceled: "Upload abgebrochen.",
@@ -36,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadMultiple: true,
         parallelUploads: 5,
         createImageThumbnails: true,
-        resizeWidth: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? uploader_options.imageMaxWidth : null,
-        resizeHeight: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? uploader_options.imageMaxHeight : null,
+        resizeWidth: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxWidth : null,
+        resizeHeight: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxHeight : null,
         resizeMethod: 'contain',
         resizeQuality: 0.8,
         init: function() {
@@ -103,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const selectButton = document.createElement('button');
                             selectButton.className = 'btn btn-xs btn-select';
                             selectButton.setAttribute('data-filename', fileInfo.name);
-                            selectButton.textContent = uploader_options.messages.selectFile || 'Übernehmen';
+                            selectButton.textContent = window.uploader_options.messages.selectFile || 'Übernehmen';
                             selectButton.addEventListener('click', function(e) {
                                 e.preventDefault();
                                 if (opener_input_field.substr(0, 14) === 'REX_MEDIALIST_') {
@@ -122,8 +128,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const resizeCheckbox = document.getElementById('resize-images');
             if (resizeCheckbox) {
                 resizeCheckbox.addEventListener('change', function() {
-                    myDropzone.options.resizeWidth = this.checked ? uploader_options.imageMaxWidth : null;
-                    myDropzone.options.resizeHeight = this.checked ? uploader_options.imageMaxHeight : null;
+                    myDropzone.options.resizeWidth = this.checked ? window.uploader_options.imageMaxWidth : null;
+                    myDropzone.options.resizeHeight = this.checked ? window.uploader_options.imageMaxHeight : null;
                 });
             }
         }
