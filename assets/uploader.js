@@ -1,277 +1,256 @@
-/* Datei: assets/uploader.css */
-:root {
-  --uploader-border-color: #c1c9d4;
-  --uploader-error-color: #a94442;
-  --uploader-bg-color: #fff;
-  --uploader-text-color: #333;
-  --uploader-success-color: #228B22;
-  --uploader-progress-color: #333;
-}
+/* globals Dropzone, selectMedia, selectMedialist */
 
-.uploader-dropzone {
-  background: var(--uploader-bg-color);
-  border: 2px dashed var(--uploader-border-color);
-  min-height: 150px;
-  padding: 20px;
-  position: relative;
-  margin: 1em 0;
-}
+// Konfiguration für Dropzone verhindern, dass es automatisch Uploads findet
+Dropzone.autoDiscover = false;
 
-.uploader-dropzone.dz-clickable {
-  cursor: pointer;
-}
-
-.uploader-dropzone.dz-clickable .dz-message,
-.uploader-dropzone.dz-clickable .dz-message * {
-  cursor: pointer;
-}
-
-.uploader-dropzone.dz-drag-hover {
-  border-style: solid;
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.uploader-dropzone .dz-message {
-  text-align: center;
-  margin: 2em 0;
-  font-size: 1.5em;
-  color: var(--uploader-border-color);
-}
-
-.uploader-dropzone .dz-preview {
-  position: relative;
-  display: inline-block;
-  vertical-align: top;
-  margin: 16px;
-  min-height: 100px;
-}
-
-.uploader-dropzone .dz-preview.dz-file-preview .dz-image {
-  border-radius: 5px;
-  background: #999;
-  background: linear-gradient(to bottom, #eee, #ddd);
-}
-
-.uploader-dropzone .dz-preview .dz-image {
-  border-radius: 5px;
-  overflow: hidden;
-  width: 120px;
-  height: 120px;
-  position: relative;
-  display: block;
-  z-index: 10;
-}
-
-.uploader-dropzone .dz-preview .dz-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.uploader-dropzone .dz-preview .dz-details {
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0;
-  font-size: 13px;
-  min-width: 100%;
-  max-width: 100%;
-  padding: 10px;
-  text-align: center;
-  color: var(--uploader-text-color);
-  line-height: 150%;
-  z-index: 20;
-  transition: opacity 0.2s linear;
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.uploader-dropzone .dz-preview:hover .dz-details {
-  opacity: 1;
-}
-
-.uploader-dropzone .dz-preview .dz-details .dz-size,
-.uploader-dropzone .dz-preview .dz-details .dz-filename {
-  white-space: nowrap;
-}
-
-.uploader-dropzone .dz-preview .dz-progress {
-  opacity: 1;
-  z-index: 1000;
-  pointer-events: none;
-  position: absolute;
-  height: 16px;
-  left: 50%;
-  top: 50%;
-  margin-top: -8px;
-  width: 80px;
-  margin-left: -40px;
-  background: rgba(255, 255, 255, 0.9);
-  transform: scale(1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.uploader-dropzone .dz-preview .dz-progress .dz-upload {
-  background: var(--uploader-progress-color);
-  background: linear-gradient(to bottom, #666, #444);
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 0;
-  transition: width 300ms ease-in-out;
-}
-
-.uploader-dropzone .dz-preview.dz-success .dz-progress {
-  display: none;
-}
-
-.uploader-dropzone .dz-preview.dz-error .dz-error-message {
-  display: block;
-}
-
-.uploader-dropzone .dz-preview .dz-error-message {
-  pointer-events: none;
-  z-index: 1000;
-  position: absolute;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 8px;
-  font-size: 13px;
-  top: 130px;
-  left: -10px;
-  width: 140px;
-  background: var(--uploader-error-color);
-  background: linear-gradient(to bottom, var(--uploader-error-color), #8a3333);
-  padding: 0.5em 1em;
-  color: white;
-}
-
-.uploader-dropzone .dz-preview:hover .dz-error-message {
-  opacity: 1;
-  display: block;
-}
-
-.uploader-dropzone .dz-preview .dz-success-mark,
-.uploader-dropzone .dz-preview .dz-error-mark {
-  pointer-events: none;
-  opacity: 0;
-  z-index: 500;
-  position: absolute;
-  display: block;
-  top: 50%;
-  left: 50%;
-  margin-left: -27px;
-  margin-top: -27px;
-}
-
-.uploader-dropzone .dz-preview .dz-success-mark svg,
-.uploader-dropzone .dz-preview .dz-error-mark svg {
-  display: block;
-  width: 54px;
-  height: 54px;
-}
-
-.uploader-dropzone .dz-preview.dz-success .dz-success-mark {
-  opacity: 1;
-  animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-.uploader-dropzone .dz-preview.dz-error .dz-error-mark {
-  opacity: 1;
-  animation: slide-in 3s cubic-bezier(0.77, 0, 0.175, 1);
-}
-
-.uploader-dropzone .dz-preview .btn-select {
-  display: none;
-}
-
-.uploader-dropzone .dz-preview.dz-success .btn-select {
-  display: block;
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 30;
-}
-
-.uploader-options {
-  margin-top: 15px;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: #f5f5f5;
-  border-radius: 5px;
-}
-
-.uploader-options .checkbox {
-  margin-bottom: 10px;
-}
-
-@keyframes slide-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-50px);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(0px);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(0px);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50px);
-  }
-}
-
-/* Dark Mode Support */
-body.rex-theme-dark {
-  --uploader-border-color: rgba(27, 35, 44, 0.6);
-  --uploader-bg-color: rgba(32, 43, 53, 0.6);
-  --uploader-text-color: rgba(255, 255, 255, 0.75);
-}
-
-body.rex-theme-dark .uploader-options {
-  background: rgba(32, 43, 53, 0.6);
-}
-
-body.rex-theme-dark .uploader-dropzone .dz-message {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-body.rex-theme-dark .uploader-dropzone .dz-preview .dz-details {
-  background: rgba(32, 43, 53, 0.8);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-body.rex-theme-dark .uploader-dropzone .dz-preview .dz-progress {
-  background: rgba(32, 43, 53, 0.9);
-}
-
-@media (prefers-color-scheme: dark) {
-  body.rex-has-theme:not(.rex-theme-light) {
-    --uploader-border-color: rgba(27, 35, 44, 0.6);
-    --uploader-bg-color: rgba(32, 43, 53, 0.6);
-    --uploader-text-color: rgba(255, 255, 255, 0.75);
-  }
-  
-  body.rex-has-theme:not(.rex-theme-light) .uploader-options {
-    background: rgba(32, 43, 53, 0.6);
-  }
-  
-  body.rex-has-theme:not(.rex-theme-light) .uploader-dropzone .dz-message {
-    color: rgba(255, 255, 255, 0.45);
-  }
-  
-  body.rex-has-theme:not(.rex-theme-light) .uploader-dropzone .dz-preview .dz-details {
-    background: rgba(32, 43, 53, 0.8);
-    color: rgba(255, 255, 255, 0.9);
-  }
-  
-  body.rex-has-theme:not(.rex-theme-light) .uploader-dropzone .dz-preview .dz-progress {
-    background: rgba(32, 43, 53, 0.9);
-  }
-}
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Sicherstellen, dass uploader_options verfügbar ist
+    if (typeof window.uploader_options === 'undefined') {
+        console.error('Uploader options not found. Make sure vars.php is included before uploader.js');
+        
+        // Default-Optionen als Fallback erstellen
+        window.uploader_options = {
+            messages: {
+                maxNumberOfFiles: "Maximale Anzahl an Dateien überschritten",
+                acceptFileTypes: "Unzulässiger Dateityp",
+                maxFileSize: "Datei zu groß",
+                minFileSize: "Datei zu klein",
+                selectFile: "Übernehmen"
+            },
+            context: "mediapool_upload",
+            endpoint: "index.php?page=uploader/endpoint",
+            loadImageMaxFileSize: 30000000, // 30 MB default
+            imageMaxWidth: 4000,
+            imageMaxHeight: 4000,
+            acceptFileTypes: null
+        };
+    }
+    
+    // REDAXO MediaPool-Kategorie auswählen
+    var mediaCatSelect = document.getElementById('rex-mediapool-category');
+    if (!mediaCatSelect) return;
+    
+    var form = mediaCatSelect.closest('form');
+    if (!form) return;
+    
+    // Sicherstellen, dass die URL gesetzt ist
+    var uploadUrl = window.uploader_options.endpoint || form.getAttribute('action') || "index.php?page=uploader/endpoint";
+    
+    // Dropzone Konfiguration
+    var dropzoneOptions = {
+        url: uploadUrl,
+        paramName: "files", // Der Name des Datei-Parameters im Request
+        maxFilesize: window.uploader_options.loadImageMaxFileSize / 1000000, // MB
+        acceptedFiles: window.uploader_options.acceptFileTypes || null,
+        addRemoveLinks: true,
+        dictDefaultMessage: "Dateien hier ablegen oder klicken zum Auswählen",
+        dictFallbackMessage: "Dein Browser unterstützt keine Drag'n'Drop Datei-Uploads.",
+        dictFileTooBig: window.uploader_options.messages.maxFileSize,
+        dictInvalidFileType: window.uploader_options.messages.acceptFileTypes,
+        dictResponseError: "Server antwortete mit {{statusCode}} Code.",
+        dictCancelUpload: "Upload abbrechen",
+        dictUploadCanceled: "Upload abgebrochen.",
+        dictRemoveFile: "Datei entfernen",
+        dictRemoveFileConfirmation: null,
+        thumbnailWidth: 120,
+        thumbnailHeight: 120,
+        previewTemplate: document.querySelector('#dropzone-preview-template') ? 
+            document.querySelector('#dropzone-preview-template').innerHTML : 
+            '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
+        autoProcessQueue: false, // Nicht automatisch hochladen
+        uploadMultiple: true,
+        parallelUploads: 5,
+        createImageThumbnails: true,
+        resizeWidth: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxWidth : null,
+        resizeHeight: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxHeight : null,
+        resizeMethod: 'contain',
+        resizeQuality: 0.8,
+        init: function() {
+            var myDropzone = this;
+            
+            // Upload-Button-Klick
+            var startButton = document.querySelector(".start");
+            if (startButton) {
+                startButton.addEventListener("click", function() {
+                    myDropzone.processQueue();
+                });
+            }
+            
+            // Kategorie-Parameter hinzufügen
+            this.on("sending", function(file, xhr, formData) {
+                var category = document.getElementById('rex-mediapool-category');
+                if (category) {
+                    formData.append("rex_file_category", category.value);
+                }
+                
+                var title = document.querySelector('[name="ftitle"]');
+                if (title) {
+                    formData.append("ftitle", title.value);
+                }
+                
+                // Dateiname als Titel verwenden wenn Option aktiviert
+                var filenameAsTitle = document.getElementById('filename-as-title');
+                if (filenameAsTitle && filenameAsTitle.checked) {
+                    formData.append("filename-as-title", "1");
+                }
+                
+                // Alle Metainfo-Felder hinzufügen
+                var metaFields = document.querySelectorAll('form [name^="med_"]');
+                for (var i = 0; i < metaFields.length; i++) {
+                    formData.append(metaFields[i].name, metaFields[i].value);
+                }
+            });
+            
+            // Nach Upload Erfolg
+            this.on("success", function(file, response) {
+                // REDAXO Medienpool Integration
+                if (file.previewElement) {
+                    if (response && response.files && response.files[0]) {
+                        var fileInfo = response.files[0];
+                        
+                        // Wenn eine Fehler passiert ist
+                        if (fileInfo.error) {
+                            var node = file.previewElement.querySelector("[data-dz-errormessage]");
+                            if (node) node.textContent = fileInfo.error;
+                            file.previewElement.classList.add("dz-error");
+                            return;
+                        }
+                        
+                        // Erfolgreicher Upload
+                        file.previewElement.classList.add("dz-success");
+                        
+                        // Thumbnail aktualisieren wenn verfügbar
+                        if (fileInfo.thumbnailUrl) {
+                            var imgElement = file.previewElement.querySelector("[data-dz-thumbnail]");
+                            if (imgElement) {
+                                imgElement.src = fileInfo.thumbnailUrl;
+                                imgElement.alt = fileInfo.name;
+                            }
+                        }
+                        
+                        // Übernehmen-Button für Widget hinzufügen
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var opener_input_field = urlParams.get('opener_input_field');
+                        if (opener_input_field) {
+                            var selectButton = document.createElement('button');
+                            selectButton.className = 'btn btn-xs btn-select';
+                            selectButton.setAttribute('data-filename', fileInfo.name);
+                            selectButton.textContent = window.uploader_options.messages.selectFile || 'Übernehmen';
+                            selectButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                if (opener_input_field.substr(0, 14) === 'REX_MEDIALIST_') {
+                                    selectMedialist(fileInfo.name, '');
+                                } else {
+                                    selectMedia(fileInfo.name, '');
+                                }
+                            });
+                            var successMark = file.previewElement.querySelector(".dz-success-mark");
+                            if (successMark) {
+                                successMark.appendChild(selectButton);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Bei Resize-Checkbox-Änderung Resizing aktivieren/deaktivieren
+            var resizeCheckbox = document.getElementById('resize-images');
+            if (resizeCheckbox) {
+                resizeCheckbox.addEventListener('change', function() {
+                    myDropzone.options.resizeWidth = this.checked ? window.uploader_options.imageMaxWidth : null;
+                    myDropzone.options.resizeHeight = this.checked ? window.uploader_options.imageMaxHeight : null;
+                });
+            }
+        }
+    };
+    
+    // Metafelder bei Kategoriewechsel holen
+    if (mediaCatSelect) {
+        mediaCatSelect.addEventListener('change', function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'index.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    updateMetafields(xhr.responseText);
+                }
+            };
+            xhr.send('page=mediapool/upload&rex_file_category=' + mediaCatSelect.value);
+        });
+    }
+    
+    // Metafelder aktualisieren
+    function updateMetafields(html) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, 'text/html');
+        
+        var localParent = mediaCatSelect.closest('.form-group').parentNode;
+        if (!localParent) return;
+        
+        var ajaxParent = doc.querySelector('#rex-mediapool-category');
+        if (!ajaxParent) return;
+        
+        var ajaxFieldset = ajaxParent.closest('fieldset');
+        if (!ajaxFieldset) return;
+        
+        // Bestehende Metafelder entfernen
+        var oldFields = localParent.querySelectorAll('.form-group:not(.preserve)');
+        for (var i = 0; i < oldFields.length; i++) {
+            oldFields[i].parentNode.removeChild(oldFields[i]);
+        }
+        
+        // Neue Metafelder einfügen
+        var metafields = ajaxFieldset.querySelectorAll('.form-group');
+        var appendAfter = localParent.querySelector('.append-meta-after');
+        
+        if (appendAfter) {
+            var metafieldsArray = Array.prototype.slice.call(metafields).reverse();
+            
+            for (var j = 0; j < metafieldsArray.length; j++) {
+                var field = metafieldsArray[j];
+                var nameEl = field.querySelector('[name]');
+                if (!nameEl) continue;
+                
+                var name = nameEl.getAttribute('name');
+                
+                // Nicht-Meta-Felder überspringen
+                if (['ftitle', 'rex_file_category', 'file_new'].indexOf(name) !== -1) {
+                    continue;
+                }
+                
+                var existingField = document.querySelector('[name="' + name + '"]');
+                if (existingField) {
+                    // Wert aus bestehendem Feld übernehmen
+                    var newField = field.cloneNode(true);
+                    var newInput = newField.querySelector('[name="' + name + '"]');
+                    if (newInput) {
+                        newInput.value = existingField.value;
+                    }
+                    appendAfter.parentNode.insertBefore(newField, appendAfter.nextSibling);
+                } else {
+                    // Neues Feld einfügen
+                    appendAfter.parentNode.insertBefore(field, appendAfter.nextSibling);
+                }
+            }
+        }
+        
+        // REDAXO Events auslösen
+        if (typeof CustomEvent === 'function') {
+            var event = new CustomEvent('rex:ready', { detail: localParent });
+            document.dispatchEvent(event);
+        } else {
+            // Fallback für ältere Browser
+            var legacyEvent = document.createEvent('CustomEvent');
+            legacyEvent.initCustomEvent('rex:ready', true, true, { detail: localParent });
+            document.dispatchEvent(legacyEvent);
+        }
+    }
+    
+    // Sicherstellen, dass die Dropzone initialisiert ist
+    var uploadContainer = document.getElementById('uploader-dropzone');
+    if (uploadContainer) {
+        // Dropzone initialisieren
+        var myDropzone = new Dropzone("#uploader-dropzone", dropzoneOptions);
+    }
+});
