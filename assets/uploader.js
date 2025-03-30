@@ -244,41 +244,93 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Dropzone-Element erstellen und initialisieren
-    const uploadContainer = document.createElement('div');
-    uploadContainer.className = 'uploader-dropzone dropzone';
-    uploadContainer.id = 'uploader-dropzone';
-    
-    // Dropzone-Element in das Formular einfügen
-    const formFieldset = form.querySelector('fieldset');
-    if (formFieldset) {
-        formFieldset.appendChild(uploadContainer);
+    let uploadContainer = document.getElementById('uploader-dropzone');
+    if (!uploadContainer) {
+        uploadContainer = document.createElement('div');
+        uploadContainer.className = 'uploader-dropzone dropzone';
+        uploadContainer.id = 'uploader-dropzone';
         
-        // Existierende Uploads-Elemente verstecken
-        const oldUploadField = form.querySelector('input[type="file"]');
-        if (oldUploadField) {
-            const oldUploadParent = oldUploadField.closest('.form-group');
-            if (oldUploadParent) {
-                oldUploadParent.style.display = 'none';
+        // Dropzone-Element in das Formular einfügen
+        const formFieldset = form.querySelector('fieldset');
+        if (formFieldset) {
+            formFieldset.appendChild(uploadContainer);
+            
+            // Existierende Uploads-Elemente verstecken
+            const oldUploadField = form.querySelector('input[type="file"]');
+            if (oldUploadField) {
+                const oldUploadParent = oldUploadField.closest('.form-group');
+                if (oldUploadParent) {
+                    oldUploadParent.style.display = 'none';
+                }
             }
-        }
-        
-        // Titel und Kategorie Felder markieren, damit sie nicht entfernt werden
-        const titleField = form.querySelector('[name="ftitle"]');
-        if (titleField) {
-            const titleGroup = titleField.closest('.form-group');
-            if (titleGroup) {
-                titleGroup.classList.add('preserve', 'append-meta-after');
+            
+            // Titel und Kategorie Felder markieren, damit sie nicht entfernt werden
+            const titleField = form.querySelector('[name="ftitle"]');
+            if (titleField) {
+                const titleGroup = titleField.closest('.form-group');
+                if (titleGroup) {
+                    titleGroup.classList.add('preserve', 'append-meta-after');
+                }
             }
-        }
-        
-        if (mediaCatSelect) {
-            const catGroup = mediaCatSelect.closest('.form-group');
-            if (catGroup) {
-                catGroup.classList.add('preserve');
+            
+            if (mediaCatSelect) {
+                const catGroup = mediaCatSelect.closest('.form-group');
+                if (catGroup) {
+                    catGroup.classList.add('preserve');
+                }
             }
         }
     }
     
+    // Prüfen, ob Steuerelemente vorhanden sind
+    if (!document.querySelector('.uploader-controls')) {
+        // Steuerelemente erstellen
+        const controls = document.createElement('div');
+        controls.className = 'uploader-controls';
+        controls.innerHTML = `
+            <div class="row fileupload-buttonbar">
+                <div class="col-lg-7">
+                    <button type="button" class="btn btn-primary start">
+                        <i class="rex-icon rex-icon-upload"></i>
+                        <span>Upload starten</span>
+                    </button>
+                </div>
+            </div>
+            <div class="row fileupload-options">
+                <div class="col-lg-12">
+                    <label><input type="checkbox" ${document.getElementById('resize-images')?.checked ? 'checked' : ''} id="resize-images"> Bilder vor Upload verkleinern</label>
+                </div>
+                <div class="col-lg-12">
+                    <label><input type="checkbox" ${document.getElementById('filename-as-title')?.checked ? 'checked' : ''} id="filename-as-title" name="filename-as-title" value="1"> Dateinamen als Titel verwenden</label>
+                </div>
+            </div>
+        `;
+        
+        // Nach dem Dropzone-Container einfügen
+        if (uploadContainer) {
+            uploadContainer.insertAdjacentElement('afterend', controls);
+        }
+    }
+    
     // Dropzone initialisieren
-    new Dropzone("#uploader-dropzone", dropzoneOptions);
+    const myDropzone = new Dropzone("#uploader-dropzone", dropzoneOptions);
+    
+    // Event-Handler für den Upload-Button (falls nachträglich hinzugefügt)
+    const startButton = document.querySelector(".start:not(.dz-initialized)");
+    if (startButton) {
+        startButton.classList.add('dz-initialized');
+        startButton.addEventListener("click", function() {
+            myDropzone.processQueue();
+        });
+    }
+    
+    // Synchronisation der Resize-Checkbox (falls nachträglich hinzugefügt)
+    const resizeCheckbox = document.getElementById('resize-images');
+    if (resizeCheckbox && !resizeCheckbox.classList.contains('dz-initialized')) {
+        resizeCheckbox.classList.add('dz-initialized');
+        resizeCheckbox.addEventListener('change', function() {
+            myDropzone.options.resizeWidth = this.checked ? window.uploader_options.imageMaxWidth : null;
+            myDropzone.options.resizeHeight = this.checked ? window.uploader_options.imageMaxHeight : null;
+        });
+    }
 });
