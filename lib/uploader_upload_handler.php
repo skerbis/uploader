@@ -184,124 +184,101 @@ class uploader_iw_upload_handler extends uploader_upload_handler
      * Verarbeitet die fertige Datei nach dem Chunk-Upload
      */
     protected function handle_final_file($temp_uploaded_file, $name, $size, $type, $error, $index, $content_range) {
-        // Die Logik des ursprünglichen handle_file_upload verwenden, aber mit der temporären Datei als Quelle
+        // Verwende rex_media_service für den Upload
         $file = new \stdClass();
-        $file->name = $this->get_file_name($temp_uploaded_file, $name, $size, $type, $error, $index, $content_range);
+        $file->name = $name;
         $file->size = $this->fix_integer_overflow((int)$size);
         $file->type = $type;
         
         if ($this->validate($temp_uploaded_file, $file, $error, $index, $content_range)) {
-            $this->handle_form_data($file, $index);
+            // Temporär nach REDAXO-Media Ordner kopieren
             $upload_dir = $this->get_upload_path();
             if (!is_dir($upload_dir)) {
                 mkdir($upload_dir, $this->options['mkdir_mode'], true);
             }
-            $file_path = $this->get_upload_path($file->name);
+            $tempname = 'chunk_' . uniqid() . '_' . $file->name;
+            $file_path = $this->get_upload_path($tempname);
             
-            // Datei kopieren oder verschieben
             if (copy($temp_uploaded_file, $file_path)) {
-                $file_size = $this->get_file_size($file_path);
-                if ($file_size === $file->size) {
-                    // Die REDAXO-spezifische Verarbeitung
-                    $file->upload_complete = 1;
-                    $old_name = basename($file_path);
-                    $path_parts = pathinfo($file_path);
-                    $new_name = $path_parts['filename'];
-                    $do_subindexing = false;
+                // Nutze rex_media_service für den Upload
+                $data = [
+                    'title' => rex_post('ftitle', 'string', ''),
+                    'category_id' => (int) rex_post('rex_file_category', 'int', 0),
+                    'file' => [
+                        'name' => $file->name,
+                        'tmp_name' => $file_path,
+                        'error' => 0
+                    ]
+                ];
+                
+                // Wenn Dateiname als Titel verwendet werden soll
+                if(rex_post("filename-as-title", "int", "") === 1) {
+                    $path_parts = pathinfo($file->name);
+                    $data['title'] = $path_parts['filename'];
+                }
+                
+                try {
+                    // Medienpool-Service zum Hochladen verwenden
+                    $result = rex_media_service::addMedia($data, true, rex_post('args', 'array'));
                     
-                    // dateiname endet mit " (jfucounterXjfucounter)" -> vom uploader hochgezaehlt
-                    preg_match('/(.+)( \(jfucounter\d+jfucounter\))/', $new_name, $matches);
-                    if ($matches) {
-                        $new_name = $matches[1];
-                    }
-                    
-                    // dateiname genauso fertig machen wie im medienpoolupload/ -sync
-                    $new_name = rex_string::normalize($new_name, '_', '-.');
-                    if (isset($path_parts['extension'])) {
-                        // ---- ext checken - alle scriptendungen rausfiltern
-                        if (in_array($path_parts['extension'], rex_addon::get('mediapool')->getProperty('blocked_extensions'))) {
-                            $new_name .= $path_parts['extension'];
-                            $path_parts['extension'] = 'txt';
-                        }
-                        
-                        // ---- multiple extension check
-                        foreach (rex_addon::get('mediapool')->getProperty('blocked_extensions') as $ext) {
-                            $new_name = str_replace($ext . '.', $ext . '_.', $new_name);
-                        }
-                        $new_name = $new_name . '.' . $path_parts['extension'];
-                    }
-                    
-                    // es gibt schon eine datei mit dem neuen namen, mp muss hochzaehlen
-                    if ($new_name != $old_name && is_file(rex_path::media($new_name))) {
-                        $do_subindexing = true;
-                    }
-                    
-                    // finalen namen holen
-                    $new_name = rex_mediapool_filename($new_name, $do_subindexing);
-                    $file->name = $new_name;
-                    $file_path = rex_path::media($new_name);
-                    
-                    // datei umbenennen und synchronisieren
-                    rename(rex_path::media($old_name), rex_path::media($new_name));
-                    $catid = rex_post('rex_file_category');
-                    $title = rex_post('ftitle', 'string', '');
-
-                    if(rex_post("filename-as-title", "int", "") === 1) {
-                        $title = $path_parts['filename'];
-                    }
-
-                    $success = rex_mediapool_syncFile($file->name, $catid, $title);
-                    $mediaFile = rex_media::get($success['filename']);
-
-                    //vorläufiger Bugfix wegen überschriebener Daten aus MEDIA_ADDED / MEDIA_UPDATED
-                    //gilt solange, wie der PR 5852 nicht gmerged wurde (https://github.com/redaxo/redaxo/pull/5852)
-                    $mediaMetaSql = rex_sql::factory();
-                    $mediaMetaResult = $mediaMetaSql->getArray('SELECT column_name AS column_name FROM information_schema.columns WHERE table_name = "rex_media" AND column_name LIKE "med_%"');
-                    $metainfos = [];
-
+                    // Metadaten verarbeiten
                     if(!isset($this->savedPostVars)) {
                         $this->savedPostVars = $_POST;
                     }
-
+                    
+                    $mediaMetaSql = rex_sql::factory();
+                    $mediaMetaResult = $mediaMetaSql->getArray('SELECT column_name AS column_name FROM information_schema.columns WHERE table_name = "rex_media" AND column_name LIKE "med_%"');
+                    
                     if ($mediaMetaSql->getRows() > 0) {
+                        $metainfos = [];
+                        $mediaFile = rex_media::get($result['filename']);
+                        
                         foreach ($mediaMetaResult as $metaField) {
                             if (!isset($metaField['column_name'])) {
                                 continue;
                             }
 
                             $metaName = $metaField['column_name'];
-                            $value = $mediaFile->getValue($metaName); //Bereits erfasster Wert durch MEDIA_ADDED/MEDIA_UPDATED
+                            $value = $mediaFile->getValue($metaName);
                             if(isset($this->savedPostVars[$metaName]) && mb_strlen($this->savedPostVars[$metaName]) > 0) {
-                                //Uploader-Feature: Nutze angegebene Daten für alle Dateien
                                 $value = $this->savedPostVars[$metaName];
                             }
 
                             $metainfos[$metaName] = $value;
                             $_POST[$metaName] = $value;
                         }
+                        
+                        $result = array_merge($result, $metainfos);
+                        uploader_meta::save($result);
                     }
-
-                    // merge metainfos with success array
-                    $success = array_merge($success, $metainfos);
-                    //ENDE vorläufiger Bugfix wegen überschriebener Daten aus MEDIA_ADDED / MEDIA_UPDATED
                     
-                    // metainfos schreiben
-                    uploader_meta::save($success);
-                    
+                    // Erfolg zurückgeben
+                    $file->upload_complete = 1;
+                    $file->name = $result['filename'];
                     $file->url = $this->get_download_url($file->name);
+                    
+                    // Thumbnail für Bilder
                     if ($this->has_image_file_extension($file->name)) {
-                        $this->handle_image_file($file_path, $file);
+                        $media = rex_media::get($file->name);
+                        if ($media && $media->isImage()) {
+                            $file->thumbnailUrl = 'index.php?rex_media_type=rex_mediapool_preview&rex_media_file=' . $file->name;
+                            if (rex_file::extension($file->name) == 'svg') {
+                                $file->thumbnailUrl = '/media/' . $file->name;
+                            }
+                        }
                     }
-                } else {
-                    $file->size = $file_size;
-                    if ($this->options['discard_aborted_uploads']) {
+                    
+                    $this->set_additional_file_properties($file);
+                } catch (rex_api_exception $e) {
+                    $file->error = $e->getMessage();
+                } finally {
+                    // Temporäre Datei löschen
+                    if (file_exists($file_path)) {
                         unlink($file_path);
-                        $file->error = $this->get_error_message('abort');
                     }
                 }
-                $this->set_additional_file_properties($file);
             } else {
-                $file->error = $this->get_error_message('move_error');
+                $file->error = 'Failed to move uploaded file.';
             }
         }
         
@@ -314,147 +291,91 @@ class uploader_iw_upload_handler extends uploader_upload_handler
             return $this->handle_chunk_upload($uploaded_file, $name, $size, $type, $error, $index, $content_range);
         }
         
-        // Standard-Verarbeitung aus dem Original-Handler
+        // Standard-Verarbeitung für normale Uploads
         $file = new \stdClass();
         $file->name = $this->get_file_name($uploaded_file, $name, $size, $type, $error, $index, $content_range);
         $file->size = $this->fix_integer_overflow((int)$size);
         $file->type = $type;
+        
         if ($this->validate($uploaded_file, $file, $error, $index, $content_range)) {
-            $this->handle_form_data($file, $index);
-            $upload_dir = $this->get_upload_path();
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, $this->options['mkdir_mode'], true);
-            }
-            $file_path = $this->get_upload_path($file->name);
-            $append_file = $content_range && is_file($file_path) &&
-                $file->size > $this->get_file_size($file_path);
-            if ($uploaded_file && is_uploaded_file($uploaded_file)) {
-                // multipart/formdata uploads (POST method uploads)
-                if ($append_file) {
-                    file_put_contents(
-                        $file_path,
-                        fopen($uploaded_file, 'r'),
-                        FILE_APPEND
-                    );
-                } else {
-                    move_uploaded_file($uploaded_file, $file_path);
-                }
-            } else {
-                // Non-multipart uploads (PUT method support)
-                file_put_contents(
-                    $file_path,
-                    fopen($this->options['input_stream'], 'r'),
-                    $append_file ? FILE_APPEND : 0
-                );
-            }
-            $file_size = $this->get_file_size($file_path, $append_file);
-            if ($file_size === $file->size) {
-                // iw patch start
-                $file->upload_complete = 1;
-                $old_name              = basename($file_path);
-                $path_parts            = pathinfo($file_path);
-                $new_name              = $path_parts['filename'];
-                // initial auf false, ansonsten wuerde der mediapool immer eins hochgezaehlen
-                $do_subindexing = false;
+            // rex_media_service für den Upload verwenden
+            if (is_uploaded_file($uploaded_file)) {
+                $data = [
+                    'title' => rex_post('ftitle', 'string', ''),
+                    'category_id' => (int) rex_post('rex_file_category', 'int', 0),
+                    'file' => [
+                        'name' => $file->name,
+                        'tmp_name' => $uploaded_file,
+                        'error' => 0
+                    ]
+                ];
                 
-                // dateiname endet mit " (jfucounterXjfucounter)" -> vom uploader hochgezaehlt
-                preg_match('/(.+)( \(jfucounter\d+jfucounter\))/', $new_name, $matches);
-                if ($matches) {
-                    $new_name = $matches[1];
+                // Wenn Dateiname als Titel verwendet werden soll
+                if(rex_post("filename-as-title", "int", "") === 1) {
+                    $path_parts = pathinfo($file->name);
+                    $data['title'] = $path_parts['filename'];
                 }
                 
-                // dateiname genauso fertig machen wie im medienpoolupload/ -sync
-                $new_name = rex_string::normalize($new_name, '_', '-.');
-                if (isset($path_parts['extension'])) {
-                    // ---- ext checken - alle scriptendungen rausfiltern
-                    if (in_array($path_parts['extension'], rex_addon::get('mediapool')->getProperty('blocked_extensions'))) {
-                        $new_name                .= $path_parts['extension'];
-                        $path_parts['extension'] = 'txt';
+                try {
+                    // Medienpool-Service zum Hochladen verwenden
+                    $result = rex_media_service::addMedia($data, true, rex_post('args', 'array'));
+                    
+                    // Metadaten verarbeiten
+                    if(!isset($this->savedPostVars)) {
+                        $this->savedPostVars = $_POST;
                     }
                     
-                    // ---- multiple extension check
-                    foreach (rex_addon::get('mediapool')->getProperty('blocked_extensions') as $ext) {
-                        $new_name = str_replace($ext . '.', $ext . '_.', $new_name);
-                    }
-                    $new_name = $new_name . '.' . $path_parts['extension'];
-                }
-                
-                // es gibt schon eine datei mit dem neuen namen, mp muss hochzaehlen
-                if ($new_name != $old_name && is_file(rex_path::media($new_name))) {
-                    $do_subindexing = true;
-                }
-                
-                // finalen namen holen
-                $new_name   = rex_mediapool_filename($new_name, $do_subindexing);
-                $file->name = $new_name;
-                $file_path  = rex_path::media($new_name);
-                
-                // datei umbenennen und synchronisieren
-                rename(rex_path::media($old_name), rex_path::media($new_name));
-                $catid   = rex_post('rex_file_category');
-                $title   = rex_post('ftitle', 'string', '');
+                    $mediaMetaSql = rex_sql::factory();
+                    $mediaMetaResult = $mediaMetaSql->getArray('SELECT column_name AS column_name FROM information_schema.columns WHERE table_name = "rex_media" AND column_name LIKE "med_%"');
+                    
+                    if ($mediaMetaSql->getRows() > 0) {
+                        $metainfos = [];
+                        $mediaFile = rex_media::get($result['filename']);
+                        
+                        foreach ($mediaMetaResult as $metaField) {
+                            if (!isset($metaField['column_name'])) {
+                                continue;
+                            }
 
-                if(rex_post("filename-as-title", "int", "") === 1) {
-                    $title = $path_parts['filename'];
-                }
+                            $metaName = $metaField['column_name'];
+                            $value = $mediaFile->getValue($metaName);
+                            if(isset($this->savedPostVars[$metaName]) && mb_strlen($this->savedPostVars[$metaName]) > 0) {
+                                $value = $this->savedPostVars[$metaName];
+                            }
 
-                $success = rex_mediapool_syncFile($file->name, $catid, $title);
-                $mediaFile = rex_media::get($success['filename']);
-
-                //vorläufiger Bugfix wegen überschriebener Daten aus MEDIA_ADDED / MEDIA_UPDATED
-                //gilt solange, wie der PR 5852 nicht gmerged wurde (https://github.com/redaxo/redaxo/pull/5852)
-                $mediaMetaSql = rex_sql::factory();
-                $mediaMetaResult = $mediaMetaSql->getArray('SELECT column_name AS column_name FROM information_schema.columns WHERE table_name = "rex_media" AND column_name LIKE "med_%"');
-                $metainfos = [];
-
-                if(!isset($this->savedPostVars)) {
-                    $this->savedPostVars = $_POST;
-                }
-
-                if ($mediaMetaSql->getRows() > 0) {
-                    foreach ($mediaMetaResult as $metaField) {
-                        if (!isset($metaField['column_name'])) {
-                            continue;
+                            $metainfos[$metaName] = $value;
+                            $_POST[$metaName] = $value;
                         }
-
-                        $metaName = $metaField['column_name'];
-                        $value = $mediaFile->getValue($metaName); //Bereits erfasster Wert durch MEDIA_ADDED/MEDIA_UPDATED
-                        if(isset($this->savedPostVars[$metaName]) && mb_strlen($this->savedPostVars[$metaName]) > 0) {
-                            //Uploader-Feature: Nutze angegebene Daten für alle Dateien
-                            $value = $this->savedPostVars[$metaName];
+                        
+                        $result = array_merge($result, $metainfos);
+                        uploader_meta::save($result);
+                    }
+                    
+                    // Erfolg zurückgeben
+                    $file->upload_complete = 1;
+                    $file->name = $result['filename'];
+                    $file->url = $this->get_download_url($file->name);
+                    
+                    // Thumbnail für Bilder
+                    if ($this->has_image_file_extension($file->name)) {
+                        $media = rex_media::get($file->name);
+                        if ($media && $media->isImage()) {
+                            $file->thumbnailUrl = 'index.php?rex_media_type=rex_mediapool_preview&rex_media_file=' . $file->name;
+                            if (rex_file::extension($file->name) == 'svg') {
+                                $file->thumbnailUrl = '/media/' . $file->name;
+                            }
                         }
-
-                        $metainfos[$metaName] = $value;
-                        $_POST[$metaName] = $value;
                     }
-                }
-
-                // merge metainfos with success array
-                $success = array_merge($success, $metainfos);
-                //ENDE vorläufiger Bugfix wegen überschriebener Daten aus MEDIA_ADDED / MEDIA_UPDATED
-                
-                // metainfos schreiben
-                uploader_meta::save($success);
-                
-                // iw patch end
-                
-                $file->url = $this->get_download_url($file->name);
-                if ($this->has_image_file_extension($file->name)) {
-                    if ($content_range && !$this->validate_image_file($file_path, $file, $error, $index)) {
-                        unlink($file_path);
-                    } else {
-                        $this->handle_image_file($file_path, $file);
-                    }
+                    
+                    $this->set_additional_file_properties($file);
+                } catch (rex_api_exception $e) {
+                    $file->error = $e->getMessage();
                 }
             } else {
-                $file->size = $file_size;
-                if (!$content_range && $this->options['discard_aborted_uploads']) {
-                    unlink($file_path);
-                    $file->error = $this->get_error_message('abort');
-                }
+                $file->error = 'File is not an uploaded file.';
             }
-            $this->set_additional_file_properties($file);
         }
+        
         return $file;
     }
 }
