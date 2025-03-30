@@ -32,7 +32,6 @@ if ($this->getProperty('context') == 'mediapool_upload') {
     
     <div id="uploader-buttonbar-template" style="display: none">
         <dl class="rex-form-group form-group preserve" id="uploader-row">
-        <dt></dt>
         <dd>
         <!-- The table listing the files available for upload/download -->
         <div class="uploader-dropzone"><span class="hint">' . $this->i18n('buttonbar_dropzone') . '</span>
