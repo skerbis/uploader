@@ -3,6 +3,7 @@
 $resize = $this->getConfig('image-resize-checked') == 'true' ? 'checked' : '';
 $filenameAsTitle = $this->getConfig('filename-as-title-checked') == 'true' ? 'checked' : '';
 
+// Dropzone-Vorlagen-Template
 $output = '<div id="dropzone-preview-template" style="display: none;">
   <div class="dz-preview dz-file-preview">
     <div class="dz-image"><img data-dz-thumbnail /></div>
@@ -27,21 +28,23 @@ $output = '<div id="dropzone-preview-template" style="display: none;">
   </div>
 </div>';
 
-$output .= '<div class="row fileupload-buttonbar">
-    <div class="col-lg-7">
-        <button type="button" class="btn btn-primary start">
-            <i class="rex-icon rex-icon-upload"></i>
-            <span>' . $this->i18n('uploader_buttonbar_start_upload') . '</span>
-        </button>
+// Die Buttonbar mit dem Upload-Button
+$output .= '<div class="uploader-controls">
+    <div class="row fileupload-buttonbar">
+        <div class="col-lg-7">
+            <button type="button" class="btn btn-primary start">
+                <i class="rex-icon rex-icon-upload"></i>
+                <span>' . $this->i18n('uploader_buttonbar_start_upload') . '</span>
+            </button>
+        </div>
     </div>
-</div>';
-
-$output .= '<div class="row fileupload-options">
-    <div class="col-lg-12">
-        <label><input type="checkbox" '.$resize.' id="resize-images"> ' . $this->i18n('buttonbar_resize_images') . '</label>
-    </div>
-    <div class="col-lg-12">
-        <label><input type="checkbox" '.$filenameAsTitle.' id="filename-as-title" name="filename-as-title" value="1"> ' . $this->i18n('buttonbar_filename_as_title') . '</label>
+    <div class="row fileupload-options">
+        <div class="col-lg-12">
+            <label><input type="checkbox" '.$resize.' id="resize-images"> ' . $this->i18n('buttonbar_resize_images') . '</label>
+        </div>
+        <div class="col-lg-12">
+            <label><input type="checkbox" '.$filenameAsTitle.' id="filename-as-title" name="filename-as-title" value="1"> ' . $this->i18n('buttonbar_filename_as_title') . '</label>
+        </div>
     </div>
 </div>';
 
