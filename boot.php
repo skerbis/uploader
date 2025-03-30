@@ -41,12 +41,13 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
                 $vars = include(rex_path::addon('uploader') . 'inc/vars.php');
                 $ep->setSubject(str_replace('</head>', $vars . '</head>', $ep->getSubject()));
                 
-                // Wenn wir im Medienpool sind, benötigen wir ein zusätzliches Template für die Integration
+                // Wenn wir im Medienpool sind
                 if (rex_get('page', 'string') == 'mediapool/upload') {
-                    // Hier fügen wir den Dropzone-Container in den Medienpool ein
-                    $search = '<div class="panel-body">';
-                    $replace = '<div class="panel-body">
-                    <!-- Dropzone-Vorlagen-Template -->
+                    $resize = $this->getConfig('image-resize-checked') ? 'checked' : '';
+                    $filenameAsTitle = $this->getConfig('filename-as-title-checked') ? 'checked' : '';
+                    
+                    // Dropzone-Vorlagen-Template
+                    $dropzone_template = '
                     <div id="dropzone-preview-template" style="display: none;">
                       <div class="dz-preview dz-file-preview">
                         <div class="dz-image"><img data-dz-thumbnail /></div>
@@ -71,44 +72,49 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
                       </div>
                     </div>';
                     
-                    // Wir suchen nach der Form und fügen unseren Dropzone-Container ein
-                    $search2 = '<div class="form-group" id="rex-mediapool-choose-file">';
-                    $replace2 = '<!-- Uploader Integration -->
-                    <fieldset>
-                        <legend>Dateien hochladen</legend>
-                        <div id="uploader-dropzone" class="uploader-dropzone dropzone"></div>
-                        <div class="uploader-options">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" ' . ($this->getConfig('image-resize-checked') ? 'checked' : '') . ' id="resize-images"> 
-                                            ' . $this->i18n('buttonbar_resize_images') . '
-                                        </label>
-                                    </div>
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" ' . ($this->getConfig('filename-as-title-checked') ? 'checked' : '') . ' id="filename-as-title" name="filename-as-title" value="1"> 
-                                            ' . $this->i18n('buttonbar_filename_as_title') . '
-                                        </label>
-                                    </div>
+                    // Uploader-Inhalte
+                    $uploader_content = '
+                    <div id="uploader-dropzone" class="uploader-dropzone dropzone"></div>
+                    <div class="uploader-options">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" ' . $resize . ' id="resize-images"> 
+                                        ' . $this->i18n('buttonbar_resize_images') . '
+                                    </label>
                                 </div>
-                                <div class="col-md-6 text-right">
-                                    <button type="button" class="btn btn-primary start">
-                                        <i class="rex-icon rex-icon-upload"></i>
-                                        ' . $this->i18n('uploader_buttonbar_start_upload') . '
-                                    </button>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" ' . $filenameAsTitle . ' id="filename-as-title" name="filename-as-title" value="1"> 
+                                        ' . $this->i18n('buttonbar_filename_as_title') . '
+                                    </label>
                                 </div>
                             </div>
+                            <div class="col-md-6 text-right">
+                                <button type="button" class="btn btn-primary start">
+                                    <i class="rex-icon rex-icon-upload"></i>
+                                    ' . $this->i18n('uploader_buttonbar_start_upload') . '
+                                </button>
+                            </div>
                         </div>
-                    </fieldset>
+                    </div>';
                     
-                    <!-- Original Medienpool Upload -->
-                    <div class="form-group hidden" id="rex-mediapool-choose-file">';
-                    
+                    // Direkt nach dem Medienpool-Kategorie-Dropdown einfügen und das ursprüngliche Upload-Feld ausblenden
                     $content = $ep->getSubject();
+                    
+                    // Füge das Dropzone-Template am Ende des head-Bereichs ein
+                    $content = str_replace('</head>', $dropzone_template . '</head>', $content);
+                    
+                    // Finde die Position des Medienpool-Upload-Formulars
+                    $search = '<div class="form-group" id="rex-mediapool-choose-file">';
+                    
+                    // Ersetze es mit unserem Uploader und verstecke das Original
+                    $replace = $uploader_content . '<div class="form-group hidden" id="rex-mediapool-choose-file">';
+                    
+                    // Führe die Ersetzung durch
                     $content = str_replace($search, $replace, $content);
-                    $content = str_replace($search2, $replace2, $content);
+                    
                     $ep->setSubject($content);
                 }
             });
