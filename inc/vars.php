@@ -6,6 +6,9 @@ if(isset($args['types']) && trim($args['types'])) {
     $allowed_filetypes = implode(',', rex_mediapool_getMediaTypeWhitelist($args));
     // Wir fügen einen Punkt hinzu, um Dateiendungen zu kennzeichnen
     $allowed_filetypes = '.' . str_replace(',', ',.', $allowed_filetypes);
+} else {
+    // Standard-Dateitypen inklusive Videos, wenn keine spezifischen Typen angegeben sind
+    $allowed_filetypes = '.jpg,.jpeg,.png,.gif,.svg,.mp4,.mov,.avi,.wmv,.webm,.ogg';
 }
 return '
 <script>
