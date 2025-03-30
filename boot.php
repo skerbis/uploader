@@ -26,10 +26,6 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
         }
 
         if ($include_assets) {
-            // JavaScript-Variablen gleich direkt einbinden, nicht über den OUTPUT_FILTER
-            $vars = include(rex_path::addon('uploader') . 'inc/vars.php');
-            rex_view::addJsContent('uploader_options', $vars);
-            
             // Dropzone.js und CSS per CDN einbinden
             rex_view::addCssFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.css');
             rex_view::addJsFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.js');
@@ -39,6 +35,11 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
             rex_view::addJsFile($this->getAssetsUrl('uploader.js'));
 
             rex_extension::register('OUTPUT_FILTER', function (rex_extension_point $ep) {
+                // JavaScript-Variablen vor dem schließenden head-Tag einfügen
+                $vars = include(rex_path::addon('uploader') . 'inc/vars.php');
+                $ep->setSubject(str_replace('</head>', $vars . '</head>', $ep->getSubject()));
+                
+                // Buttonbar-Template vor dem schließenden body-Tag einfügen
                 $buttonbar_template = include(rex_path::addon('uploader') . 'inc/buttonbar.php');
                 $ep->setSubject(str_replace('</body>', $buttonbar_template . '</body>', $ep->getSubject()));
             });
