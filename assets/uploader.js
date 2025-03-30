@@ -77,11 +77,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 thumbnailHeight: 120,
                 previewTemplate: document.querySelector('#dropzone-preview-template') ? 
                     document.querySelector('#dropzone-preview-template').innerHTML : 
-                    '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
+                    '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name"></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
                 autoProcessQueue: false, // Nicht automatisch hochladen
                 uploadMultiple: true,
                 parallelUploads: 5,
                 createImageThumbnails: true,
+                
+                // Chunked Upload Konfiguration
+                chunking: true,
+                forceChunking: true, // Erzwinge Chunking auch für kleine Dateien
+                chunkSize: 5000000, // 5 MB pro Chunk
+                retryChunks: true, // Wiederhole fehlgeschlagene Chunks
+                retryChunksLimit: 3, // Maximale Anzahl von Wiederholungsversuchen
+                parallelChunkUploads: true, // Paralleles Hochladen von Chunks
+                
                 resizeWidth: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxWidth : null,
                 resizeHeight: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxHeight : null,
                 resizeMethod: 'contain',
@@ -217,6 +226,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadMultiple: true,
                 parallelUploads: 5,
                 createImageThumbnails: true,
+                
+                // Chunked Upload Konfiguration
+                chunking: true,
+                forceChunking: true,
+                chunkSize: 5000000, // 5 MB pro Chunk
+                retryChunks: true,
+                retryChunksLimit: 3,
+                parallelChunkUploads: true,
+                
                 resizeWidth: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxWidth : null,
                 resizeHeight: document.getElementById('resize-images') && document.getElementById('resize-images').checked ? window.uploader_options.imageMaxHeight : null,
                 resizeMethod: 'contain',
