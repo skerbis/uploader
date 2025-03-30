@@ -3,27 +3,19 @@
 $addon = rex_addon::get('uploader');
 
 if (rex::isBackend() && rex::getUser()) {
-    rex_perm::register('uploader[]');
-    rex_perm::register('uploader[page]');
+        rex_perm::register('uploader[]');
+        rex_perm::register('uploader[page]');
 
-    if (!rex::getUser()->hasPerm('uploader[page]')) {
-        $page = $this->getProperty('page');
-        $page['hidden'] = 'true';
-        $this->setProperty('page', $page);
-    }
+  if (!rex::getUser()->hasPerm('uploader[page]')) {
+     $page = $this->getProperty('page');
+     $page['hidden'] = 'true';
+     $this->setProperty('page', $page);
+  }
 }    
 
 rex_extension::register('PACKAGES_INCLUDED', function () {
     if (rex::isBackend() && rex::getUser() && rex::getUser()->hasPerm('uploader[]')) {
-        if (rex::isDebugMode() && rex_request_method() == 'get') {
-            $compiler = new rex_scss_compiler();
-            $compiler->setRootDir($this->getPath());
-            $compiler->setScssFile($this->getPath('scss/uploader.scss'));
-            $compiler->setCssFile($this->getPath('assets/uploader.css'));
-            $compiler->compile();
-            rex_file::copy($this->getPath('assets/uploader.css'), $this->getAssetsPath('uploader.css'));
-            rex_file::copy($this->getPath('assets/uploader.js'), $this->getAssetsPath('uploader.js'));
-        }
+        // SCSS-Compiler-Teil entfernt
         
         $include_assets = 0;
         if (rex_get('page', 'string') == 'mediapool/upload') {
