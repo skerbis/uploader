@@ -1,4 +1,3 @@
-// Datei: assets/uploader.js
 /* globals Dropzone, selectMedia, selectMedialist */
 
 // Konfiguration für Dropzone verhindern, dass es automatisch Uploads findet
@@ -9,7 +8,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sicherstellen, dass uploader_options verfügbar ist
     if (typeof window.uploader_options === 'undefined') {
         console.error('Uploader options not found. Make sure vars.php is included before uploader.js');
-        return;
+        
+        // Default-Optionen als Fallback erstellen
+        window.uploader_options = {
+            messages: {
+                maxNumberOfFiles: "Maximale Anzahl an Dateien überschritten",
+                acceptFileTypes: "Unzulässiger Dateityp",
+                maxFileSize: "Datei zu groß",
+                minFileSize: "Datei zu klein",
+                selectFile: "Übernehmen"
+            },
+            context: "mediapool_upload",
+            endpoint: "index.php?page=uploader/endpoint",
+            loadImageMaxFileSize: 30000000, // 30 MB default
+            imageMaxWidth: 4000,
+            imageMaxHeight: 4000,
+            acceptFileTypes: null
+        };
     }
     
     // REDAXO MediaPool-Kategorie auswählen
@@ -24,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         url: window.uploader_options.endpoint,
         paramName: "files", // Der Name des Datei-Parameters im Request
         maxFilesize: window.uploader_options.loadImageMaxFileSize / 1000000, // MB
-        acceptedFiles: window.uploader_options.acceptFileTypes ? window.uploader_options.acceptFileTypes.toString().replace(/\/(\.|\/)|\(|\)|\$/gi, '') : null,
+        acceptedFiles: window.uploader_options.acceptFileTypes ? window.uploader_options.acceptFileTypes : null,
         addRemoveLinks: true,
         dictDefaultMessage: "Dateien hier ablegen oder klicken zum Auswählen",
         dictFallbackMessage: "Dein Browser unterstützt keine Drag'n'Drop Datei-Uploads.",
@@ -37,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dictRemoveFileConfirmation: null,
         thumbnailWidth: 120,
         thumbnailHeight: 120,
-        previewTemplate: document.querySelector('#dropzone-preview-template').innerHTML,
+        previewTemplate: document.querySelector('#dropzone-preview-template')?.innerHTML || 
+            '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
         autoProcessQueue: false, // Nicht automatisch hochladen
         uploadMultiple: true,
         parallelUploads: 5,
@@ -50,9 +66,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const myDropzone = this;
             
             // Upload-Button-Klick
-            document.querySelector(".start").addEventListener("click", function() {
-                myDropzone.processQueue();
-            });
+            const startButton = document.querySelector(".start");
+            if (startButton) {
+                startButton.addEventListener("click", function() {
+                    myDropzone.processQueue();
+                });
+            }
             
             // Kategorie-Parameter hinzufügen
             this.on("sending", function(file, xhr, formData) {
@@ -88,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Wenn eine Fehler passiert ist
                         if (fileInfo.error) {
                             const node = file.previewElement.querySelector("[data-dz-errormessage]");
-                            node.textContent = fileInfo.error;
+                            if (node) node.textContent = fileInfo.error;
                             file.previewElement.classList.add("dz-error");
                             return;
                         }
@@ -99,8 +118,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Thumbnail aktualisieren wenn verfügbar
                         if (fileInfo.thumbnailUrl) {
                             const imgElement = file.previewElement.querySelector("[data-dz-thumbnail]");
-                            imgElement.src = fileInfo.thumbnailUrl;
-                            imgElement.alt = fileInfo.name;
+                            if (imgElement) {
+                                imgElement.src = fileInfo.thumbnailUrl;
+                                imgElement.alt = fileInfo.name;
+                            }
                         }
                         
                         // Übernehmen-Button für Widget hinzufügen
@@ -118,7 +139,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     selectMedia(fileInfo.name, '');
                                 }
                             });
-                            file.previewElement.querySelector(".dz-success-mark").appendChild(selectButton);
+                            const successMark = file.previewElement.querySelector(".dz-success-mark");
+                            if (successMark) {
+                                successMark.appendChild(selectButton);
+                            }
                         }
                     }
                 }
@@ -151,6 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.text())
             .then(html => {
                 updateMetafields(html);
+            })
+            .catch(error => {
+                console.error('Fehler beim Laden der Metafelder:', error);
             });
         });
     }
@@ -161,7 +188,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const doc = parser.parseFromString(html, 'text/html');
         
         const localParent = mediaCatSelect.closest('.form-group').parentNode;
-        const ajaxParent = doc.querySelector('#rex-mediapool-category').closest('fieldset');
+        if (!localParent) return;
+        
+        const ajaxParent = doc.querySelector('#rex-mediapool-category');
+        if (!ajaxParent) return;
+        
+        const ajaxFieldset = ajaxParent.closest('fieldset');
+        if (!ajaxFieldset) return;
         
         // Bestehende Metafelder entfernen
         localParent.querySelectorAll('.form-group:not(.preserve)').forEach(el => {
@@ -169,30 +202,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Neue Metafelder einfügen
-        const metafields = Array.from(ajaxParent.querySelectorAll('.form-group'));
-        metafields.reverse().forEach(field => {
-            const name = field.querySelector('[name]')?.getAttribute('name');
-            
-            // Nicht-Meta-Felder überspringen
-            if (['ftitle', 'rex_file_category', 'file_new'].includes(name)) {
-                return;
-            }
-            
-            const existingField = document.querySelector(`[name="${name}"]`);
-            if (existingField) {
-                // Wert aus bestehendem Feld übernehmen
-                const newField = field.cloneNode(true);
-                newField.querySelector(`[name="${name}"]`).value = existingField.value;
-                localParent.querySelector('.append-meta-after').after(newField);
-            } else {
-                // Neues Feld einfügen
-                localParent.querySelector('.append-meta-after').after(field);
-            }
-        });
+        const metafields = Array.from(ajaxFieldset.querySelectorAll('.form-group'));
+        const appendAfter = localParent.querySelector('.append-meta-after');
+        
+        if (appendAfter) {
+            metafields.reverse().forEach(field => {
+                const nameEl = field.querySelector('[name]');
+                if (!nameEl) return;
+                
+                const name = nameEl.getAttribute('name');
+                
+                // Nicht-Meta-Felder überspringen
+                if (['ftitle', 'rex_file_category', 'file_new'].includes(name)) {
+                    return;
+                }
+                
+                const existingField = document.querySelector(`[name="${name}"]`);
+                if (existingField) {
+                    // Wert aus bestehendem Feld übernehmen
+                    const newField = field.cloneNode(true);
+                    const newInput = newField.querySelector(`[name="${name}"]`);
+                    if (newInput) {
+                        newInput.value = existingField.value;
+                    }
+                    appendAfter.insertAdjacentElement('afterend', newField);
+                } else {
+                    // Neues Feld einfügen
+                    appendAfter.insertAdjacentElement('afterend', field);
+                }
+            });
+        }
         
         // REDAXO Events auslösen
         const event = new CustomEvent('rex:ready', { detail: localParent });
         document.dispatchEvent(event);
+    }
+    
+    // Sicherstellen, dass die Formklasse auf dem Formular gesetzt ist
+    if (form && !form.classList.contains('dropzone')) {
+        form.setAttribute('action', window.uploader_options.endpoint);
     }
     
     // Dropzone-Element erstellen und initialisieren
@@ -200,10 +248,35 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadContainer.className = 'uploader-dropzone dropzone';
     uploadContainer.id = 'uploader-dropzone';
     
-    // Dropzone-Element nach den Metafeldern einfügen
+    // Dropzone-Element in das Formular einfügen
     const formFieldset = form.querySelector('fieldset');
     if (formFieldset) {
-        formFieldset.append(uploadContainer);
+        formFieldset.appendChild(uploadContainer);
+        
+        // Existierende Uploads-Elemente verstecken
+        const oldUploadField = form.querySelector('input[type="file"]');
+        if (oldUploadField) {
+            const oldUploadParent = oldUploadField.closest('.form-group');
+            if (oldUploadParent) {
+                oldUploadParent.style.display = 'none';
+            }
+        }
+        
+        // Titel und Kategorie Felder markieren, damit sie nicht entfernt werden
+        const titleField = form.querySelector('[name="ftitle"]');
+        if (titleField) {
+            const titleGroup = titleField.closest('.form-group');
+            if (titleGroup) {
+                titleGroup.classList.add('preserve', 'append-meta-after');
+            }
+        }
+        
+        if (mediaCatSelect) {
+            const catGroup = mediaCatSelect.closest('.form-group');
+            if (catGroup) {
+                catGroup.classList.add('preserve');
+            }
+        }
     }
     
     // Dropzone initialisieren
