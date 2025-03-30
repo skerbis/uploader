@@ -38,10 +38,6 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
                 // JavaScript-Variablen vor dem schließenden head-Tag einfügen
                 $vars = include(rex_path::addon('uploader') . 'inc/vars.php');
                 $ep->setSubject(str_replace('</head>', $vars . '</head>', $ep->getSubject()));
-                
-                // Buttonbar-Template vor dem schließenden body-Tag einfügen
-                $buttonbar_template = include(rex_path::addon('uploader') . 'inc/buttonbar.php');
-                $ep->setSubject(str_replace('</body>', $buttonbar_template . '</body>', $ep->getSubject()));
             });
         }
     }
