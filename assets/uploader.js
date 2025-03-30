@@ -77,9 +77,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 thumbnailHeight: 120,
                 previewTemplate: document.querySelector('#dropzone-preview-template') ? 
                     document.querySelector('#dropzone-preview-template').innerHTML : 
-                    '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name"></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
+                    '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size"></span></div><div class="dz-filename"><span data-dz-name"></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
                 autoProcessQueue: false, // Nicht automatisch hochladen
-                uploadMultiple: true,
                 parallelUploads: 5,
                 createImageThumbnails: true,
                 
@@ -223,7 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.querySelector('#dropzone-preview-template').innerHTML : 
                     '<div class="dz-preview dz-file-preview"><div class="dz-image"><img data-dz-thumbnail /></div><div class="dz-details"><div class="dz-size"><span data-dz-size></span></div><div class="dz-filename"><span data-dz-name></span></div></div><div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div><div class="dz-error-message"><span data-dz-errormessage></span></div><div class="dz-success-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M14,27 L22,35 L42,15" stroke="#228B22" stroke-width="3" fill="none"/></svg></div><div class="dz-error-mark"><svg width="54px" height="54px" viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="white"/><path d="M17,17 L37,37 M37,17 L17,37" stroke="#a94442" stroke-width="3" fill="none"/></svg></div></div>',
                 autoProcessQueue: false,
-                uploadMultiple: true,
                 parallelUploads: 5,
                 createImageThumbnails: true,
                 
