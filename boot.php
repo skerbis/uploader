@@ -35,9 +35,11 @@ rex_extension::register('PACKAGES_INCLUDED', function () {
 
         if ($include_assets) {
             // Dropzone.js und CSS per CDN einbinden
-            rex_view::addCssFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.css');
-            rex_view::addJsFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.js');
-            
+            #rex_view::addCssFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.css');
+            #rex_view::addJsFile('https://unpkg.com/dropzone@5/dist/min/dropzone.min.js');
+            rex_view::addCssFile('https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css');
+            rex_view::addJsFile('https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js');
+                
             // Eigene CSS- und JS-Dateien
             rex_view::addCssFile($this->getAssetsUrl('uploader.css'));
             rex_view::addJsFile($this->getAssetsUrl('uploader.js'));
